@@ -1,0 +1,37 @@
+Log file: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1c/logs/20260829T115731Z-preflight.log
+
+CP2105 CONTROLLED SMT INSPECTION
+================================
+
+Wrapper version       : v0.1c
+Expected serial       : 01E83F39
+Expected VID:PID      : 10c4:ea70
+Expected envelope     : 01 01 5F 5D F0 FE F0 FE 10 10 10 00
+Envelope SHA-256      : A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+
+VERIFIED Silicon Labs cp210xsmt          D9F002FB1B890E294FC23AC4E7CE4FC2965FC7F2411CA315FCBF68A69FC6D745
+VERIFIED Virgin baseline config          D40AC873B1A097A14C634A2764E1B3259C9AB7BFA9C3ED9429FFA4A757D21FC0
+VERIFIED Five-GPIO target config         8CE174B5DAD1AF1D51E6C655B0207DA1454E1314D3DC8605A18D498C9AE77991
+VERIFIED Programming envelope            A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+VERIFIED Dynamic dependencies            PASS
+VERIFIED ModemManager inactive           PASS
+VERIFIED CP2105 tty handles closed       PASS (/dev/ttyUSB0 /dev/ttyUSB1)
+
+USB identity
+  Sysfs device        : /sys/bus/usb/devices/3-2
+  USB bus/device      : 3/3
+  Serial              : 01E83F39
+  Serial interfaces   : /dev/ttyUSB0 /dev/ttyUSB1
+
+INSPECTION PASSED.
+No cp210xsmt command was invoked by this inspection.
+
+===== SILICON LABS READ-ONLY DEVICE LIST =====
+Command: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1c/vendor/cp210xsmt --list /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1c/CP2105-five-gpio-target.cfg
+
+--- devices --------------
+--------------------------
+
+cp210xsmt exit code: 0
+
+ERROR: The --list output did not contain exactly one expected serial number.

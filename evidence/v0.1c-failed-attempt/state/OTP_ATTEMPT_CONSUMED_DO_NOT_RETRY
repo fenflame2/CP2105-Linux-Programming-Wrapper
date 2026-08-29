@@ -1,0 +1,8 @@
+CP2105 OTP ATTEMPT CONSUMED
+UTC time: 2026-08-29T11:49:01+00:00
+Host: petalinux-2025-2
+Serial: 01E83F39
+Envelope: 01 01 5F 5D F0 FE F0 FE 10 10 10 00
+Envelope SHA-256: A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+This marker was created before entering the Silicon Labs programming boundary.
+Do not remove it merely to retry a failed or ambiguous operation.

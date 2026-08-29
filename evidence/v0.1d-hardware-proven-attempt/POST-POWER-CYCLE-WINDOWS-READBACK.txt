@@ -1,0 +1,36 @@
+CP2105 v0.1d POST-POWER-CYCLE WINDOWS READBACK
+==============================================
+
+Device
+------
+Physical device count: 1
+Part Number:           0x05 (CP2105)
+Serial:                01E83F39
+Lock Value:            0x00
+
+Configuration
+-------------
+DeviceMode ECI:        0x01
+DeviceMode SCI:        0x01
+Mode:                  0x5D5F
+Reset_Latch:           0xFEF0
+Suspend_Latch:         0xFEF0
+EnhancedFxn_ECI:       0x10
+EnhancedFxn_SCI:       0x10
+EnhancedFxn_Device:    0x10
+
+Decoded five-GPIO profile
+-------------------------
+ECI GPIO.0: PUSH-PULL, Reset HIGH, Suspend HIGH
+ECI GPIO.1: PUSH-PULL, Reset HIGH, Suspend HIGH
+SCI GPIO.0: PUSH-PULL, Reset LOW,  Suspend LOW
+SCI GPIO.1: PUSH-PULL, Reset LOW,  Suspend LOW
+SCI GPIO.2: PUSH-PULL, Reset LOW,  Suspend LOW
+
+Conclusion
+----------
+After complete USB power removal and reconnection, every field in the intended
+programming envelope matched. The device is fully programmed and must not be
+programmed again. The v0.1d Linux failure was confined to same-powered-session
+post-reset verification of power-on-latched DualPortConfig values.
+

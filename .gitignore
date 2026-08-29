@@ -1,0 +1,17 @@
+# The audited Silicon Labs executable must be installed locally from the
+# official SDK. It is deliberately not redistributed or committed.
+/vendor/*
+!/vendor/.gitkeep
+
+# Runtime audit output and active one-shot state belong to the local machine.
+/logs/*
+!/logs/.gitkeep
+/state/*
+!/state/.gitkeep
+
+# Release archives are attached to versioned GitHub releases, not committed.
+/*.tar.gz
+/*.tar.gz.sha256
+
+# Locally downloaded Silicon Labs packages remain outside this repository.
+/USBXpressHostSDK*

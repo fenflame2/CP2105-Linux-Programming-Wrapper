@@ -1,0 +1,13 @@
+CP2105 OTP v0.1d CORRECTED-HARDWARE ATTEMPT CONSUMED
+UTC time: 2026-08-29T13:50:40+00:00
+Host: petalinux-2025-2
+Serial: 01E83F39
+Envelope: 01 01 5F 5D F0 FE F0 FE 10 10 10 00
+Envelope SHA-256: A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+Hardware correction: J6 pins 9-10 shorting block removed and operator-verified open.
+J4 state: pins 1-2 and pins 3-4 operator-confirmed installed.
+Correction record SHA-256: 8DB0D5602678B711318F2AD4A2BB3C1EF0AD70C784C00C3A872A9DE7E1560722
+Prior v0.1c marker SHA-256: C20512DDCCD5FD54229D1E04F1855EA2612B8C12EF12D6B3A6827C111D031E12
+This marker was created before entering the Silicon Labs programming boundary.
+Do not remove it merely to retry a failed or ambiguous operation.
+

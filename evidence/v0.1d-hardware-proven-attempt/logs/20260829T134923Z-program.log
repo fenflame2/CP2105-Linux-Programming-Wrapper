@@ -1,0 +1,101 @@
+Log file: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/logs/20260829T134923Z-program.log
+
+CP2105 CONTROLLED SMT INSPECTION
+================================
+
+Wrapper version       : v0.1d
+Expected serial       : 01E83F39
+Expected VID:PID      : 10c4:ea70
+Expected envelope     : 01 01 5F 5D F0 FE F0 FE 10 10 10 00
+Envelope SHA-256      : A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+Hardware correction   : J6 pins 9-10 removed; operator verification required
+
+VERIFIED Silicon Labs cp210xsmt                 D9F002FB1B890E294FC23AC4E7CE4FC2965FC7F2411CA315FCBF68A69FC6D745
+VERIFIED Virgin baseline config                 D40AC873B1A097A14C634A2764E1B3259C9AB7BFA9C3ED9429FFA4A757D21FC0
+VERIFIED Five-GPIO target config                8CE174B5DAD1AF1D51E6C655B0207DA1454E1314D3DC8605A18D498C9AE77991
+VERIFIED J6 hardware correction record          8DB0D5602678B711318F2AD4A2BB3C1EF0AD70C784C00C3A872A9DE7E1560722
+VERIFIED Preserved v0.1c consumed marker        C20512DDCCD5FD54229D1E04F1855EA2612B8C12EF12D6B3A6827C111D031E12
+VERIFIED Preserved v0.1c program log            4FBB235898A8CC69A96BFB73C86FBA3333C5152C9356F2B9F8E007D98393FB1C
+VERIFIED Post-correction inspect evidence       4CAD4CDE7EEDC15F00762E52084ECE51961DCF52B4F26A396323503355068B6E
+VERIFIED Post-correction preflight evidence     C7CCB31DF0E62458F0B8DF2FDA4B952E6FA7103BAD51B64772D07DEEF91287B2
+VERIFIED Programming envelope                   A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+VERIFIED Dynamic dependencies                   PASS
+VERIFIED ModemManager inactive                  PASS
+VERIFIED CP2105 tty handles closed              PASS (/dev/ttyUSB0 /dev/ttyUSB1)
+
+USB identity
+  Sysfs device        : /sys/bus/usb/devices/3-2
+  USB bus/device      : 3/7
+  Serial              : 01E83F39
+  Serial interfaces   : /dev/ttyUSB0 /dev/ttyUSB1
+
+INSPECTION PASSED.
+No cp210xsmt command was invoked by this inspection.
+
+===== SILICON LABS READ-ONLY DEVICE LIST =====
+Command: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/vendor/cp210xsmt --list /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/CP2105-five-gpio-target.cfg
+
+--- devices --------------
+VID: 10c4 PID: ea70 Prod Str: CP2105 Dual USB to UART Bridge Controller Ser #: 01E83F39
+--------------------------
+
+cp210xsmt exit code: 0
+VERIFIED cp210xsmt serial identity              PASS
+
+===== READ-ONLY VIRGIN BASELINE VERIFICATION =====
+Command: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/vendor/cp210xsmt --device-count 1 --verify-config /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/CP2105-virgin-baseline.cfg
+
+Verified 1 devices: OK
+
+cp210xsmt exit code: 0
+
+PRE-PROGRAMMING PREFLIGHT PASSED.
+The exact CP2105 virgin baseline was verified using manufacturer reads.
+No setter, lock, or programming command was invoked.
+
+IRREVERSIBLE PROGRAMMING AUTHORIZATION
+======================================
+Manufacturer tool     : audited Silicon Labs cp210xsmt
+Physical serial       : 01E83F39
+Programming envelope  : 01 01 5F 5D F0 FE F0 FE 10 10 10 00
+Envelope SHA-256      : A5CF6A6FCFD97D2B99E97FEAE88B68FCAACA9A6F14BDAD346E1C732E170F7722
+Hardware correction   : J6 pins 9-10 must be electrically open
+Required power state  : J4 1-2 and J4 3-4 installed
+Prior attempt evidence: preserved and hash-verified
+Lock option           : NOT USED
+Setter execution count: ONE manufacturer transaction only
+
+Re-enter physical serial number: Re-enter envelope SHA-256: Type J6 9-10 IS OPEN AND VERIFIED: Type J4 1-2 AND 3-4 ARE INSTALLED: Type PROGRAM CP2105 PERMANENTLY: Type I ACCEPT ONE IRREVERSIBLE ATTEMPT: 
+ONE-SHOT v0.1d AUTHORIZATION CONSUMED.
+The corrected J6 condition has been operator-confirmed.
+The following manufacturer command will be invoked exactly once.
+No automatic timeout or programming retry is present.
+
+===== SILICON LABS ONE-SHOT SET AND VERIFY =====
+Command: /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/vendor/cp210xsmt --device-count 1 --set-and-verify-config /home/alan/work/CP2105-cp210xsmt-wrapper-v0.1d/CP2105-five-gpio-target.cfg
+
+Programmed 1 devices: OK
+Waiting 3 sec...done
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+Waiting 3 sec...done
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+Waiting 3 sec...done
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+Waiting 3 sec...done
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+Waiting 3 sec...done
+WARNING: verify(): Failed DualPortConfig verification
+
+ERROR: Verification failure - exiting program ...
+
+cp210xsmt exit code: 255
+
+CP2105 PROGRAMMING OR VERIFICATION FAILED.
+The v0.1d one-shot marker remains in place. DO NOT RETRY AUTOMATICALLY.
+The device may be virgin, partially programmed, or fully programmed.
+Perform fresh readback before deciding on any further action.
+

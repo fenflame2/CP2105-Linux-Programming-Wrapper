@@ -1,0 +1,53 @@
+CP2105 J6 HARDWARE CORRECTION RECORD
+====================================
+
+Device
+------
+Part:          CP2105
+Serial:        01E83F39
+USB VID:PID:   10c4:ea70
+
+Prior failed attempt
+--------------------
+Wrapper:       v0.1c
+UTC start:     2026-08-29T11:47:59Z
+Marker time:   2026-08-29T11:49:01Z
+Result:        Silicon Labs cp210xsmt entered --set-and-verify-config,
+               stopped responding in CP210x_SetDualPortConfig, and was
+               manually terminated. cp210xsmt exit code 143.
+
+Hardware condition subsequently discovered
+-------------------------------------------
+J1 pins 9-10:  Open
+J6 pins 9-10:  Shorted by a shorting block
+J4 pins 1-2:   Shorted, connecting VIO to VDD
+J4 pins 3-4:   Shorted, connecting VDD to the board 3.3 V rail
+J2 and J3:     All LED pairs shorted
+J8:            Shorted
+
+J6 pins 9-10 connect the CP2105 DCD_ECI/VPP node to the Enhanced-interface
+RS-232 circuitry. Silicon Labs requires this pair to be disconnected during
+configuration-ROM programming so that no other circuitry loads VPP.
+
+Material correction for the v0.1d attempt
+------------------------------------------
+The board was disconnected from USB power and the J6 pins 9-10 shorting block
+was removed. The operator must independently confirm that J6 pins 9 and 10 are
+electrically open immediately before authorizing v0.1d programming.
+
+Post-correction read-only evidence
+----------------------------------
+At 2026-08-29T13:29:19Z, v0.1c inspect and preflight both passed after the J6
+correction. The official Silicon Labs cp210xsmt tool detected exactly one device
+with serial 01E83F39 and verified the exact virgin baseline configuration.
+
+No setter, lock, or programming operation was invoked by those post-correction
+checks. The CP2105 remained demonstrably virgin.
+
+Authorization meaning
+---------------------
+v0.1d is not an automatic retry of the v0.1c transaction. It is a separately
+authorized attempt following a documented and material correction to the VPP
+programming circuit. The original v0.1c consumed marker and logs remain
+preserved under evidence/v0.1c-failed-attempt/.
+

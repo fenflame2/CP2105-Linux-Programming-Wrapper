@@ -1,0 +1,37 @@
+Breakpoint 1 at 0x7107: file cp210xsmt.cpp, line 398.
+Breakpoint 2 at 0x87a7: file cp210xsmt.cpp, line 605.
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff77ff640 (LWP 6123)]
+
+Thread 1 "cp210xsmt" hit Breakpoint 1, CDeviceMode::verify (this=0x7fffffffdda4, dev=...) at cp210xsmt.cpp:398
+398	cp210xsmt.cpp: No such file or directory.
+
+===== EXACT DEVICE MODE READBACK =====
+DeviceMode ECI      : 0x01
+DeviceMode SCI      : 0x01
+
+Thread 1 "cp210xsmt" hit Breakpoint 2, CDualPortConfig::verify (this=0x7fffffffdda8, dev=...) at cp210xsmt.cpp:605
+605	in cp210xsmt.cpp
+
+===== EXACT DUAL_PORT_CONFIG READBACK =====
+Mode                : 0x5151
+Reset_Latch         : 0xFEFE
+Suspend_Latch       : 0xFEFE
+EnhancedFxn_ECI     : 0x10
+EnhancedFxn_SCI     : 0x10
+EnhancedFxn_Device  : 0x10
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+WARNING: verify(): Failed DualPortConfig verification
+Retrying verification ...
+WARNING: verify(): Failed DualPortConfig verification
+
+ERROR: Verification failure - exiting program ...
+[Thread 0x7ffff77ff640 (LWP 6123) exited]
+[Inferior 1 (process 6120) exited with code 0377]
+
