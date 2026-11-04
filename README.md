@@ -1,11 +1,15 @@
-# CP2105 Linux Controlled Programming Wrapper v0.2a
+# CP2105 Linux Controlled Programming Wrapper v0.2b
 
 This repository contains a Linux safety wrapper around the unchanged Silicon
 Labs USBXpress Host SDK 6.7.7 `cp210xsmt` executable.
 
-Version v0.2a is serial-agnostic. It can process any new CP2105 serial number,
-one attached device at a time, while retaining an independent permanent
-one-shot history for every device it encounters.
+Version v0.2b is serial-agnostic and board-neutral. It can process any new
+CP2105 serial number, one attached device at a time, while retaining an
+independent permanent one-shot history for every device it encounters.
+
+Board-specific jumper names are not part of the runtime authorization. The
+operator remains responsible for confirming that the attached board's
+electrical, GPIO-load and power-removal requirements are satisfied.
 
 The target configuration remains deliberately fixed. The attached physical
 device identity is discovered and bound at runtime.
@@ -54,7 +58,7 @@ authorized new device receives the same hash-locked five-GPIO configuration.
 ## Two-phase programming architecture
 
 Phase 1 runs the complete virgin preflight, creates the detected serial's
-immutable consumed marker, requires six exact confirmations, and invokes one
+immutable consumed marker, requires four exact confirmations, and invokes one
 manufacturer setter transaction:
 
 ```bash
@@ -68,8 +72,8 @@ cp210xsmt --device-count 1 --set-config CP2105-five-gpio-target.cfg
 The wrapper never uses `--set-and-verify-config` and never retries a setter.
 
 After the manufacturer process ends, the wrapper labels the target as not yet
-verified. Remove all USB and board power, allow the rails to discharge,
-reconnect the same physical CP2105 with J6 pins 9-10 open, and then run:
+verified. Remove all USB, board and external power, allow the rails to
+discharge, reconnect the same physical CP2105, and then run:
 
 ```bash
 sudo ./cp2105-smt-control.sh verify-programmed
@@ -90,7 +94,9 @@ power-cycle, or process-interference problem.
 The `evidence/` directory preserves the original hardware investigation that
 proved why a true power cycle is required. Its historical files identify the
 reference device used during development; that serial is evidence only and is
-not an execution constraint in v0.2a.
+not an execution constraint in v0.2b. The J4/J6 designators in that directory
+describe only the historical development board and are not runtime prompts or
+requirements for another board.
 
 The v0.1d manufacturer transaction reported `Programmed 1 devices: OK`, then
 produced a false-negative same-powered-session `DualPortConfig` verification.
@@ -208,19 +214,22 @@ The same installed wrapper directory can process multiple devices sequentially:
 A consumed marker blocks only its own serial. It does not authorize, consume,
 or block a different serial.
 
-## Required hardware and host state
+## Required board, device and host state
 
-- J6 pins 9-10 electrically open
-- J4 pins 1-2 installed
-- J4 pins 3-4 installed
+- board-specific CP2105 electrical and programming requirements reviewed
+- all five connected GPIO loads safe for the fixed target profile
+- every CP2105 power and back-power path understood and removable for the
+  mandatory cold verification cycle
 - exactly one `10c4:ea70` device
 - readable, non-empty USB serial
 - both CP2105 tty interfaces closed
 - ModemManager inactive
 - no pre-existing `cp210xsmt` process
 
-J1 pins 9-10 do not isolate VPP. The relevant configuration-ROM programming
-connection is J6 pins 9-10.
+The wrapper cannot inspect board-level wiring. Running `program` asserts that
+the operator has already verified the attached board's electrical and power
+state. The authorization still requires exact re-entry of the detected serial,
+target SHA-256, permanent-programming phrase and one-attempt acknowledgement.
 
 ## ModemManager after reboot
 

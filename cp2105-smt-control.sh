@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-VERSION="v0.2a"
+VERSION="v0.2b"
 EXPECTED_VID="10c4"
 EXPECTED_PID="ea70"
 EXPECTED_SMT_SHA256="d9f002fb1b890e294fc23ac4e7ce4fc2965fc7f2411ca315fcbf68a69fc6d745"
@@ -71,11 +71,11 @@ Modes:
   verify-target      Unconditional read-only verification of the exact target.
                      This is the recovery/forensic mode for an earlier attempt.
   program            Detect and cross-check the attached CP2105 serial, verify
-                     the virgin baseline, consume that serial's v0.2a one-shot
+                     the virgin baseline, consume that serial's v0.2b one-shot
                      marker, and invoke --set-config exactly once.
   verify-programmed  Rediscover the attached serial, require that same serial's
-                     v0.2a consumed marker and explicit confirmation of complete
-                     power removal/reconnection, then invoke only read-only
+                     v0.2a or v0.2b consumed marker, confirm complete power
+                     removal/reconnection, then invoke only read-only
                      --verify-config against the exact target.
 
 The irreversible and read-only phases are deliberately separate. A successful
@@ -170,10 +170,12 @@ bind_device_state_paths() {
     [[ "$SERIAL_STATE_KEY" =~ ^[0-9a-f]{64}$ ]] || fail "Could not derive a safe serial state key."
 
     DEVICE_STATE_DIR="$DEVICE_STATE_ROOT/$SERIAL_STATE_KEY"
-    CONSUMED_MARKER="$DEVICE_STATE_DIR/OTP_ATTEMPT_V02A_CONSUMED_DO_NOT_RETRY"
-    PROGRAM_SUCCESS_MARKER="$DEVICE_STATE_DIR/OTP_V02A_PROGRAM_REPORTED_SUCCESS_AWAITING_POWER_CYCLE_VERIFY"
-    PROGRAM_AMBIGUOUS_MARKER="$DEVICE_STATE_DIR/OTP_V02A_PROGRAM_RESULT_AMBIGUOUS_READBACK_REQUIRED"
-    VERIFIED_MARKER="$DEVICE_STATE_DIR/OTP_V02A_POWER_CYCLE_TARGET_VERIFIED"
+    LEGACY_V02A_CONSUMED_MARKER="$DEVICE_STATE_DIR/OTP_ATTEMPT_V02A_CONSUMED_DO_NOT_RETRY"
+    CONSUMED_MARKER="$DEVICE_STATE_DIR/OTP_ATTEMPT_V02B_CONSUMED_DO_NOT_RETRY"
+    PROGRAM_SUCCESS_MARKER="$DEVICE_STATE_DIR/OTP_V02B_PROGRAM_REPORTED_SUCCESS_AWAITING_POWER_CYCLE_VERIFY"
+    PROGRAM_AMBIGUOUS_MARKER="$DEVICE_STATE_DIR/OTP_V02B_PROGRAM_RESULT_AMBIGUOUS_READBACK_REQUIRED"
+    VERIFIED_MARKER="$DEVICE_STATE_DIR/OTP_V02B_POWER_CYCLE_TARGET_VERIFIED"
+    ACTIVE_CONSUMED_MARKER=""
 }
 
 find_exact_usb_device() {
@@ -255,7 +257,7 @@ inspect_environment() {
     printf 'Expected VID:PID      : %s:%s\n' "$EXPECTED_VID" "$EXPECTED_PID"
     printf 'Expected envelope     : %s\n' "$EXPECTED_ENVELOPE"
     printf 'Envelope SHA-256      : %s\n' "$EXPECTED_ENVELOPE_SHA256"
-    printf 'Hardware correction   : J6 pins 9-10 removed; operator verification required\n\n'
+    printf 'Hardware platform     : board-specific prerequisites are operator-controlled\n\n'
 
     verify_static_files
     verify_no_live_smt_process
@@ -377,6 +379,9 @@ ensure_no_active_attempt_marker() {
     if [[ -f "$CONSUMED_MARKER" ]]; then
         show_existing_marker_and_fail "$CONSUMED_MARKER"
     fi
+    if [[ -f "$LEGACY_V02A_CONSUMED_MARKER" ]]; then
+        show_existing_marker_and_fail "$LEGACY_V02A_CONSUMED_MARKER"
+    fi
 }
 
 write_immutable_marker() {
@@ -395,7 +400,7 @@ consume_attempt_marker() {
     mkdir -p -- "$DEVICE_STATE_DIR"
     ensure_no_active_attempt_marker
     if ! write_immutable_marker "$CONSUMED_MARKER" \
-        "CP2105 OTP v0.2a SERIAL-SCOPED TWO-PHASE ATTEMPT CONSUMED" \
+        "CP2105 OTP v0.2b SERIAL-SCOPED TWO-PHASE ATTEMPT CONSUMED" \
         "UTC time: $(date -u --iso-8601=seconds)" \
         "Host: $(hostname)" \
         "Serial: $CURRENT_SERIAL" \
@@ -404,23 +409,33 @@ consume_attempt_marker() {
         "Envelope: $EXPECTED_ENVELOPE" \
         "Envelope SHA-256: $EXPECTED_ENVELOPE_SHA256" \
         "Programming operation: cp210xsmt --device-count 1 --set-config target" \
-        "Hardware correction: J6 pins 9-10 shorting block removed and operator-verified open." \
-        "J4 state: pins 1-2 and pins 3-4 operator-confirmed installed." \
+        "Board prerequisites: operator accepted responsibility for the attached board's electrical and power state." \
+        "Authorization confirmations: serial, envelope SHA-256, permanent-programming phrase, and one-attempt acknowledgement." \
         "Prior v0.1d marker SHA-256: ${EXPECTED_V01D_MARKER_SHA256^^}" \
         "This marker was created before entering the Silicon Labs programming boundary." \
         "Do not remove it after success, failure, interruption, or an ambiguous result."; then
-        fail "Could not create the v0.2a one-shot attempt marker for serial $CURRENT_SERIAL."
+        fail "Could not create the v0.2b one-shot attempt marker for serial $CURRENT_SERIAL."
     fi
+    ACTIVE_CONSUMED_MARKER="$CONSUMED_MARKER"
 }
 
-require_v02a_attempt_marker() {
-    [[ -f "$CONSUMED_MARKER" ]] || fail \
-        "verify-programmed found no v0.2a consumed marker for detected serial $CURRENT_SERIAL. Use verify-target for read-only recovery of an earlier-version attempt."
-    grep -Fxq "CP2105 OTP v0.2a SERIAL-SCOPED TWO-PHASE ATTEMPT CONSUMED" "$CONSUMED_MARKER" || fail "The v0.2a consumed marker heading is invalid."
-    grep -Fxq "Serial: $CURRENT_SERIAL" "$CONSUMED_MARKER" || fail "The v0.2a consumed marker serial does not match the attached device."
-    grep -Fxq "Serial state key: $SERIAL_STATE_KEY" "$CONSUMED_MARKER" || fail "The v0.2a consumed marker state key does not match."
-    grep -Fxq "Envelope SHA-256: $EXPECTED_ENVELOPE_SHA256" "$CONSUMED_MARKER" || fail "The v0.2a consumed marker envelope does not match."
-    printf 'VERIFIED %-44s PASS (%s)\n' "v0.2a consumed marker" "$CURRENT_SERIAL"
+require_attempt_marker() {
+    local marker_version
+    if [[ -f "$CONSUMED_MARKER" ]]; then
+        ACTIVE_CONSUMED_MARKER="$CONSUMED_MARKER"
+        marker_version="v0.2b"
+        grep -Fxq "CP2105 OTP v0.2b SERIAL-SCOPED TWO-PHASE ATTEMPT CONSUMED" "$ACTIVE_CONSUMED_MARKER" || fail "The v0.2b consumed marker heading is invalid."
+    elif [[ -f "$LEGACY_V02A_CONSUMED_MARKER" ]]; then
+        ACTIVE_CONSUMED_MARKER="$LEGACY_V02A_CONSUMED_MARKER"
+        marker_version="v0.2a"
+        grep -Fxq "CP2105 OTP v0.2a SERIAL-SCOPED TWO-PHASE ATTEMPT CONSUMED" "$ACTIVE_CONSUMED_MARKER" || fail "The v0.2a consumed marker heading is invalid."
+    else
+        fail "verify-programmed found no v0.2a or v0.2b consumed marker for detected serial $CURRENT_SERIAL. Use verify-target for read-only recovery of an earlier-version attempt."
+    fi
+    grep -Fxq "Serial: $CURRENT_SERIAL" "$ACTIVE_CONSUMED_MARKER" || fail "The consumed marker serial does not match the attached device."
+    grep -Fxq "Serial state key: $SERIAL_STATE_KEY" "$ACTIVE_CONSUMED_MARKER" || fail "The consumed marker state key does not match."
+    grep -Fxq "Envelope SHA-256: $EXPECTED_ENVELOPE_SHA256" "$ACTIVE_CONSUMED_MARKER" || fail "The consumed marker envelope does not match."
+    printf 'VERIFIED %-44s PASS (%s, %s)\n' "Consumed attempt marker" "$CURRENT_SERIAL" "$marker_version"
 }
 
 confirm_programming() {
@@ -431,21 +446,16 @@ confirm_programming() {
     printf 'Detected serial       : %s\n' "$CURRENT_SERIAL"
     printf 'Programming envelope  : %s\n' "$EXPECTED_ENVELOPE"
     printf 'Envelope SHA-256      : %s\n' "$EXPECTED_ENVELOPE_SHA256"
-    printf 'Hardware correction   : J6 pins 9-10 must be electrically open\n'
-    printf 'Required power state  : J4 1-2 and J4 3-4 installed\n'
+    printf 'Board prerequisites   : operator-verified outside this wrapper\n'
     printf 'Lock option           : NOT USED\n'
     printf 'Setter execution count: ONE --set-config transaction only\n'
     printf 'Verification timing   : only after complete power removal\n\n'
 
-    local entered_serial entered_hash entered_j6 entered_j4 entered_phrase entered_ack
+    local entered_serial entered_hash entered_phrase entered_ack
     read -r -p "Re-enter physical serial number: " entered_serial
     [[ "$entered_serial" == "$CURRENT_SERIAL" ]] || fail "Serial confirmation did not match the attached CP2105."
     read -r -p "Re-enter envelope SHA-256: " entered_hash
     [[ "${entered_hash^^}" == "$EXPECTED_ENVELOPE_SHA256" ]] || fail "Envelope SHA-256 confirmation did not match."
-    read -r -p "Type J6 9-10 IS OPEN AND VERIFIED: " entered_j6
-    [[ "$entered_j6" == "J6 9-10 IS OPEN AND VERIFIED" ]] || fail "J6 hardware confirmation did not match."
-    read -r -p "Type J4 1-2 AND 3-4 ARE INSTALLED: " entered_j4
-    [[ "$entered_j4" == "J4 1-2 AND 3-4 ARE INSTALLED" ]] || fail "J4 power-jumper confirmation did not match."
     read -r -p "Type PROGRAM CP2105 PERMANENTLY: " entered_phrase
     [[ "$entered_phrase" == "PROGRAM CP2105 PERMANENTLY" ]] || fail "Permanent-programming phrase did not match."
     read -r -p "Type I ACCEPT ONE IRREVERSIBLE ATTEMPT: " entered_ack
@@ -458,7 +468,7 @@ confirm_power_cycle() {
     printf '========================================\n'
     printf 'This phase contains no setter or lock command.\n'
     printf 'Confirm that all CP2105 power was physically removed after the program\n'
-    printf 'process ended, then the device was reconnected with J6 pins 9-10 open.\n\n'
+    printf 'process ended, then the same device was reconnected.\n\n'
 
     local removed reconnected
     read -r -p "Type CP2105 POWER WAS FULLY REMOVED: " removed
@@ -481,19 +491,20 @@ record_program_result() {
         "The irreversible attempt marker remains permanent." \
         "No automatic setter retry is authorized." \
         "Fully remove CP2105 power before any target verification."; then
-        fail "Could not create the v0.2a program-result marker. The consumed marker remains authoritative."
+        fail "Could not create the v0.2b program-result marker. The consumed marker remains authoritative."
     fi
 }
 
 record_verified_result() {
     local consumed_hash
-    consumed_hash="$(sha256sum -- "$CONSUMED_MARKER" | awk '{print $1}')"
+    [[ -n "${ACTIVE_CONSUMED_MARKER:-}" ]] || fail "No validated consumed marker is active."
+    consumed_hash="$(sha256sum -- "$ACTIVE_CONSUMED_MARKER" | awk '{print $1}')"
     if [[ -f "$VERIFIED_MARKER" ]]; then
         printf 'NOTICE: The immutable power-cycle verification marker already exists.\n'
         return 0
     fi
     if ! write_immutable_marker "$VERIFIED_MARKER" \
-        "CP2105 OTP v0.2a POST-POWER-CYCLE TARGET VERIFIED" \
+        "CP2105 OTP v0.2b POST-POWER-CYCLE TARGET VERIFIED" \
         "UTC time: $(date -u --iso-8601=seconds)" \
         "Host: $(hostname)" \
         "Serial: $CURRENT_SERIAL" \
@@ -514,7 +525,7 @@ print_power_cycle_instructions() {
     printf '===================================================\n'
     printf '1. Confirm that no cp210xsmt process remains.\n'
     printf '2. Fully remove ALL power from the CP2105 and board; a USB reset is not enough.\n'
-    printf '3. Wait for the board rails to discharge, then reconnect serial %s with J6 9-10 open.\n' "$CURRENT_SERIAL"
+    printf '3. Wait for the board rails to discharge, then reconnect serial %s.\n' "$CURRENT_SERIAL"
     printf '4. Reattach the USB device to the Linux VM if passthrough requires it.\n'
     printf '5. Run: sudo ./cp2105-smt-control.sh verify-programmed\n'
     printf '\nDo not run program again for serial %s. Its marker remains permanent.\n' "$CURRENT_SERIAL"
@@ -528,8 +539,8 @@ program_once() {
     run_programming_boundary_recheck "$authorized_serial"
     consume_attempt_marker
 
-    printf '\nONE-SHOT v0.2a AUTHORIZATION CONSUMED FOR SERIAL %s.\n' "$CURRENT_SERIAL"
-    printf 'The corrected J6 condition has been operator-confirmed.\n'
+    printf '\nONE-SHOT v0.2b AUTHORIZATION CONSUMED FOR SERIAL %s.\n' "$CURRENT_SERIAL"
+    printf 'Board-specific electrical and power prerequisites remain the operator responsibility.\n'
     printf 'The manufacturer --set-config command will be invoked exactly once.\n'
     printf 'No same-powered-session verification, timeout, or programming retry is present.\n'
 
@@ -541,16 +552,16 @@ program_once() {
     fi
 
     if [[ $tool_status -eq 0 ]]; then
-        record_program_result "$PROGRAM_SUCCESS_MARKER" "CP2105 v0.2a PROGRAM PHASE REPORTED SUCCESS; POWER-CYCLE VERIFY REQUIRED" "$tool_status"
+        record_program_result "$PROGRAM_SUCCESS_MARKER" "CP2105 v0.2b PROGRAM PHASE REPORTED SUCCESS; POWER-CYCLE VERIFY REQUIRED" "$tool_status"
         printf '\nMANUFACTURER SET-CONFIG REPORTED SUCCESS.\n'
         printf 'This is a programming-phase result, not final target verification.\n'
         print_power_cycle_instructions
         return 0
     fi
 
-    record_program_result "$PROGRAM_AMBIGUOUS_MARKER" "CP2105 v0.2a PROGRAM RESULT AMBIGUOUS; READBACK REQUIRED" "$tool_status"
+    record_program_result "$PROGRAM_AMBIGUOUS_MARKER" "CP2105 v0.2b PROGRAM RESULT AMBIGUOUS; READBACK REQUIRED" "$tool_status"
     printf '\nCP2105 PROGRAMMING COMMAND FAILED OR RETURNED AN AMBIGUOUS RESULT.\n' >&2
-    printf 'The v0.2a marker for serial %s remains in place. DO NOT RETRY THAT DEVICE.\n' "$CURRENT_SERIAL" >&2
+    printf 'The v0.2b marker for serial %s remains in place. DO NOT RETRY THAT DEVICE.\n' "$CURRENT_SERIAL" >&2
     printf 'After the process has ended, fully remove power and perform read-only verification.\n' >&2
     print_power_cycle_instructions >&2
     return 1
@@ -558,7 +569,7 @@ program_once() {
 
 verify_programmed_after_power_cycle() {
     inspect_environment
-    require_v02a_attempt_marker
+    require_attempt_marker
     verify_list_identity
     confirm_power_cycle
     if ! run_smt_logged "POST-POWER-CYCLE READ-ONLY TARGET VERIFICATION" --device-count 1 --verify-config "$TARGET_CONFIG"; then

@@ -1,4 +1,4 @@
-# Fresh Linux Installation — CP2105 Wrapper v0.2a
+# Fresh Linux Installation — CP2105 Wrapper v0.2b
 
 This installs the serial-agnostic wrapper on a Debian or Ubuntu x86_64 host.
 The wrapper accepts any non-empty CP2105 serial number detected at runtime, one
@@ -106,7 +106,14 @@ sudo ./cp2105-smt-control.sh preflight
 ```
 
 Only after reviewing a successful virgin result and confirming the required
-hardware state may an authorized operator run:
+board state may an authorized operator run. Before authorization, verify that:
+
+- the board's CP2105 electrical and programming requirements are satisfied;
+- all five GPIO loads are safe for the fixed target profile; and
+- all USB, board, external and possible back-power sources can be removed for
+  the mandatory cold verification cycle.
+
+Then run:
 
 ```bash
 sudo ./cp2105-smt-control.sh program
